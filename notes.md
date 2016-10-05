@@ -33,7 +33,13 @@ line breaks. This is a response to multiple commands (list is a WIP):
   * starts with `"tid:"`
 * `listprocess`
   * starts with `"pid: "`
+* ??
+  * starts with `"patching smdh"`
+* ??
+  * starts with `"rtRecvSocket failed: "`
 
 Usually, it will just log the string to the main text display, but for various
 UI features, it may update them using data from the string.
 
+A `cmd` value of `0x9` is a response to the `ReadMem` command packet sent by
+the `data()` function.
