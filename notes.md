@@ -31,6 +31,9 @@ line breaks. This is a response to multiple commands (list is a WIP):
   * starts with `"valid memregions:"`
 * `listthread`
   * starts with `"tid:"`
+  * this returns the register values for each thread, but they're in the wrong
+    order.
+
 * `listprocess`
   * starts with `"pid: "`
 * ??
@@ -43,3 +46,14 @@ UI features, it may update them using data from the string.
 
 A `cmd` value of `0x9` is a response to the `ReadMem` command packet sent by
 the `data()` function.
+
+## `listthread` Response Registers
+For some reason the debugger sends the register values (as space delimited ascii
+hex within text data) in a strange order with some unknown values and possibly
+duplicates. The order is as follows:
+
+`unk0`, `unk1`, `unk2`, `r4`, `r5`, `unk5/r6`, `unk7`, `r1`, `r2`, `r3`, `r12`,
+`unk12`, `sp`, `lr`, `pc`, `unk16`, `unk17`, `unk18`, `unk19`, `unk20`, `unk21`,
+`unk22`, `unk23`, `unk24`, `unk25/r6`, `r7`, `r8`, `r9`, `r10`, `r11`, `unk31`
+
+
