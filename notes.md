@@ -3,6 +3,7 @@
 Each message contanins a header, followed by a variable length data section.
 The header of a message is 84 bytes, divided into message metadata, a fixed set
 of 16 arguments, and a size field specifying the lenght of the data.
+The first 4 bytes of the header are the magic number, `0x12345678`.
 
 ~~~
       0   1   2   3   4   5   6   7   8   9   a   b   c   d   e   f
