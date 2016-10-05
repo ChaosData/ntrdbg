@@ -1,7 +1,8 @@
 ## Message structure
 
 Each message contanins a header, followed by a variable length data section.
-The header of a message is 84 bytes, divided into message metadata, a fixed set of 16 arguments, and a size field specifying the lenght of the data.
+The header of a message is 84 bytes, divided into message metadata, a fixed set
+of 16 arguments, and a size field specifying the lenght of the data.
 
 ~~~
       0   1   2   3   4   5   6   7   8   9   a   b   c   d   e   f
@@ -15,8 +16,8 @@ The header of a message is 84 bytes, divided into message metadata, a fixed set 
  30 |     arg_8     |     arg_9     |     arg_a     |     arg_b     |
     +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
  40 |     arg_c     |     arg_d     |     arg_e     |     arg_f     |
-    +---+---+---+---+===============================================+
- 50 |     size      |              ...message data...               |
-    +---+---+---+---+===============================================+
+    +---+---+---+---+==========================================================+
+ 50 |     size      |                    ...message data...                    |
+    +---+---+---+---+==========================================================+
 
 ~~~
