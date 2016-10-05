@@ -24,10 +24,16 @@ The first 4 bytes of the header are the magic number, `0x12345678`.
     +---+---+---+---+==========================================================+
 ~~~
 
-A `cmd` value of `0x0` appears to indicate a textual response. This can be used
-as a response to a `memlayout` or a `listthread` command, or as a directive to
-log an arbitrary string. The data body for this response is a UTF-8 string with
-`\n` line breaks. For the `memlayout` response, the text starts with
-`"valid memregions:"` and is pre-formatted by the debug server; for the
-`listthread` response, it starts with `"tid:"`. Any other prefix is simply
-treated as data to log.
+A `cmd` value of `0x0` appears to indicate a UTF-8 textual response with `\n`
+line breaks. This is a response to multiple commands (list is a WIP):
+
+* `memlayout`
+  * starts with `"valid memregions:"`
+* `listthread`
+  * starts with `"tid:"`
+* `listprocess`
+  * starts with `"pid: "`
+
+Usually, it will just log the string to the main text display, but for various
+UI features, it may update them using data from the string.
+
