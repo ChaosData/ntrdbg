@@ -1,8 +1,10 @@
-## Message structure
+## Server Message structure
 
-Each message contanins a header, followed by a variable length data section.
-The header of a message is 84 bytes, divided into message metadata, a fixed set
-of 16 arguments, and a size field specifying the lenght of the data.
+The client maintains a thread that actively reads messages sent by the server.
+
+Each of these messages contanins a header, followed by a variable length data
+section. The header of a message is 84 bytes, divided into message metadata, a
+fixed set of 16 arguments, and a size field specifying the lenght of the data.
 The first 4 bytes of the header are the magic number, `0x12345678`.
 
 ~~~
@@ -20,5 +22,12 @@ The first 4 bytes of the header are the magic number, `0x12345678`.
     +---+---+---+---+==========================================================+
  50 |     size      |                    ...message data...                    |
     +---+---+---+---+==========================================================+
-
 ~~~
+
+A `cmd` value of `0x0` appears to indicate a textual response. This can be used
+as a response to a `memlayout` or a `listthread` command, or as a directive to
+log an arbitrary string. The data body for this response is a UTF-8 string with
+`\n` line breaks. For the `memlayout` response, the text starts with
+`"valid memregions:"` and is pre-formatted by the debug server; for the
+`listthread` response, it starts with `"tid:"`. Any other prefix is simply
+treated as data to log.
