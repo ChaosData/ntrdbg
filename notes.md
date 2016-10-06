@@ -110,4 +110,60 @@ Known commands:
           length field)
     * data:
         * data byte array
-
+* set breakpoint
+    * cmd: `0xb`
+    * type: `0x0`
+    * args:
+        * `(temporary ? 0x2 : 0x1)`
+        * address
+        * `0x1`
+    * no data 
+* disable breakpoint
+    * cmd: `0xb`
+    * type: `0x0`
+    * args:
+        * id
+        * `0x0`
+        * `0x3`
+    * no data
+* enable breakpoint
+    * cmd: `0xb`
+    * type: `0x0`
+    * args:
+        * id
+        * `0x0`
+        * `0x2`
+    * no data
+* resume
+    * cmd: `0xb`
+    * type: `0x0`
+    * args:
+        * `0x0`
+        * `0x0`
+        * `0x4`
+    * no data
+* attach process
+    * cmd: `0x6`
+    * type: `0x0`
+    * args:
+        * pid
+        * patch address (this is either optional or it uses `0x0` as an address)
+    * no data
+* list thread
+    * cmd: `0x7`
+    * type: `0x0`
+    * args:
+        * pid
+    * no data
+* memory layout
+    * cmd: `0x8`
+    * type: `0x0`
+    * args:
+        * pid
+    * no data
+* query handle
+    * cmd: `0xc`
+    * type: `0x0`
+    * args:
+        * pid
+    * no data
