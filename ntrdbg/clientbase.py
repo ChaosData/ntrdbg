@@ -101,16 +101,19 @@ class ClientBase(object):
       args = []
     send_args = args + ([0] * (16 - len(args)))
     header = struct.pack("<IIII", 0x12345678, seq, typ, cmd)
+    # print(send_args)
     header += struct.pack("<" + "I" * 16, *send_args)
 
-    if data is str:
+    msg = b''
+    if type(data) is str:
       _data = data.encode()
-      msg = header + _data + struct.pack("<I", len(_data))
-    elif data is bytes:
-      msg = header + data + struct.pack("<I", len(data))
+      msg += header + struct.pack("<I", len(_data)) + _data
+    elif type(data) is bytes:
+      msg += header + struct.pack("<I", len(data)) + data
     else:
-      msg = header + struct.pack("<I", 0)
+      msg += header + struct.pack("<I", 0)
 
+    # print(msg)
     _, writer = self.conn
     writer.write(msg)
 

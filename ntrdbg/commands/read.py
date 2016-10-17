@@ -2,6 +2,14 @@ import asyncio
 
 from ..clientbase import ClientBase
 
+'''
+public void sendReadMemPacket(UInt32 addr, UInt32 size, UInt32 pid,
+                              string fileName) {
+  sendEmptyPacket(9, pid, addr, size);
+  lastReadMemSeq = currentSeq;
+  lastReadMemFileName = fileName;
+}
+'''
 
 class Read(ClientBase):
   async def read_async(self, pid, address, length, filename=None):

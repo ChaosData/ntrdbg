@@ -3,7 +3,7 @@ import asyncio
 from .commands import *
 
 
-class Client(Read):
+class Client(Read, Write):
   def __init__(self, loop, asyncqueue, conn, log):
     super().__init__()
     self.loop = loop
