@@ -2,8 +2,8 @@ import asyncio
 
 from ..clientbase import ClientBase
 
-class DumpThread(ClientBase):
-  async def dump_thread_async(self, pid):
+class DumpThreads(ClientBase):
+  async def dump_threads_async(self, pid):
     await self.heartbeat_async()
 
     seq = self.seqctr
@@ -72,5 +72,5 @@ class DumpThread(ClientBase):
 
 
 
-  def dump_thread(self, *args):
-    return self.dosync(self.dump_thread_async(*args))
+  def dump_threads(self, *args):
+    return self.dosync(self.dump_threads_async(*args))
