@@ -1,5 +1,5 @@
 # ntrdbg
-*A better debgger client for NTR CFW's "debugger."*
+*A better debugger client for NTR CFW's "debugger."*
 
 ## Example Usage
 
