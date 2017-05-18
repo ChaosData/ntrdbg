@@ -70,3 +70,8 @@ def connect(*args):
 
 
 __all__ = ["connect"]
+
+# if __name__ == "__main__":
+#   import code
+#   conn = connect('192.168.2.15', 8000)
+#   code.interact(local=locals())
