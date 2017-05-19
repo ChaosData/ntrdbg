@@ -14,13 +14,11 @@ async def donothing(q):
   # print("done doing nothing")
 
 
-def ntrthreadloop_setup(loop, q):
+def ntrthreadloop_setup(loop, asyncqueue):
   asyncio.set_event_loop(loop)
   loop.run_until_complete(
-    asyncio.ensure_future(donothing(q), loop=loop)
+    asyncio.ensure_future(donothing(asyncqueue), loop=loop)
   )
-  # print("stopping thread")
-
 
 def connect(*args):
   ntrloop = asyncio.new_event_loop()
@@ -47,7 +45,6 @@ def connect(*args):
       c = Client(loop, asyncq, conn, log)
       # seq = c.seqctr
       # c.seqctr += 1000
-      await c.heartbeat_async()
       retq.put(c)
     else:
       retq.put(None)

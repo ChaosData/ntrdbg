@@ -10,7 +10,6 @@ async def dosync_ntrthread(q, task):
 
 class ClientBase(object):
   def __init__(self):
-    print("ClientBase __init__ called")
     self.seqctr = 0
     self.seqs = {}
 
@@ -18,6 +17,7 @@ class ClientBase(object):
     self.asyncqueue = None
     self.conn = None
     self.log = None
+    self.lock = asyncio.Lock()
 
   def dosync(self, task):
     q = queue.Queue(1)
@@ -42,7 +42,6 @@ class ClientBase(object):
       )
 
   async def background(self):
-    print("background started!")
     while True:
       reader, _ = self.conn
       try:
@@ -52,8 +51,6 @@ class ClientBase(object):
       #        continue
       except Exception as e:
         if reader.at_eof():
-          print("at_eof!")
-          await self.asyncqueue.put(None)
           return
         else:
           print("error: {}".format(e))
@@ -64,25 +61,23 @@ class ClientBase(object):
             for key in keys:
               q = self.seqs[key]
               await q.put(Message(0,0,0,0, "error")) # fix this up
-
-            # await self.asyncqueue.put(None)
             print("???")
             return
         continue
 
-      print("got header: {}".format(header))
+      #print("got header: {}".format(header))
       magic, seq, typ, cmd = struct.unpack("<IIII", header[:16])
       if magic != 0x12345678:
         print("bad magic value: " + magic)
         continue
-      print("got seq: {}".format(seq))
+      #print("got seq: {}".format(seq))
       args = struct.unpack("<" + "I" * 16, header[16:80])
       size, = struct.unpack("<I", header[80:])
-      print("got size: {}".format(size))
+      #print("got size: {}".format(size))
       data = None
       if size != 0:
         data = await reader.readexactly(size)
-      print(data)
+      #print(data)
       msg = Message(seq, typ, cmd, args, data)
       if seq in self.seqs:
         try:
@@ -97,11 +92,15 @@ class ClientBase(object):
         self.log_message(msg)
 
   async def disconnect_async(self):
+    await self.lock.acquire()
+
     if self.conn is not None:
       reader, writer = self.conn
       writer.close()
       reader.feed_eof()
       self.conn = None
+
+    self.lock.release()
 
   # note: this can be called multiple times depending on how threads/process are
   #      cleaned up.
@@ -157,6 +156,14 @@ class ClientBase(object):
     return self.dosync(self.send_packet_async(*args))
 
   async def heartbeat_async(self, output=True):
+    await self.lock.acquire()
+
+    if self.conn is None:
+      self.lock.release()
+      if output:
+        print("no conn to beat")
+      return True
+
     if output:
       print("sending heartbeat")
 
@@ -170,6 +177,8 @@ class ClientBase(object):
     del self.seqs[seq]
     if output:
       print("*beat*")
+
+    self.lock.release()
 
   def heartbeat(self, *args):
     self.dosync(self.heartbeat_async(*args))

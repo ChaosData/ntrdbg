@@ -18,6 +18,7 @@ class Client(Read, Write, ListProcesses, DumpThreads, DumpMappings):
     self.log = log
 
     self.backtask = asyncio.ensure_future(self.background(), loop=self.loop)
+    self.beattash = asyncio.ensure_future(self.beat(), loop=self.loop)
 
   def __enter__(self):
     pass
@@ -32,3 +33,11 @@ class Client(Read, Write, ListProcesses, DumpThreads, DumpMappings):
   def delete(self):
     # print("delete")
     self.disconnect()
+
+  async def beat(self):
+    while self.conn is not None:
+      await asyncio.sleep(1)
+      if await self.heartbeat_async(False):
+        break
+    await asyncio.sleep(1)
+    await self.asyncqueue.put(None)

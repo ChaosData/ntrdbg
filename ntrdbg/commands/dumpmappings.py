@@ -4,7 +4,7 @@ from ..clientbase import ClientBase
 
 class DumpMappings(ClientBase):
   async def dump_mappings_async(self, pid):
-    await self.heartbeat_async()
+    await self.lock.acquire()
 
     seq = self.seqctr
     self.seqctr += 1000
@@ -12,6 +12,8 @@ class DumpMappings(ClientBase):
     await self.send_packet_async(seq, 0x0, 0x8, [pid])
 
     res = await self.get_response_async()
+    self.lock.release()
+
     data = res.decode('utf-8')
     ret = {}
     lines = [line for line in data.split('\n') if line != ""]
