@@ -4,7 +4,7 @@ from ..clientbase import ClientBase
 
 class ListProcesses(ClientBase):
   async def list_processes_async(self):
-    await self.lock.acquire()
+    await self.packet_lock.acquire()
 
     seq = self.seqctr
     self.seqctr += 1000
@@ -12,7 +12,7 @@ class ListProcesses(ClientBase):
     await self.send_packet_async(seq, 0x0, 0x5)
 
     res = await self.get_response_async()
-    self.lock.release()
+    self.packet_lock.release()
 
     data = res.decode('utf-8')
 

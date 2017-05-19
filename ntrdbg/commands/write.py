@@ -4,7 +4,7 @@ from ..clientbase import ClientBase
 
 class Write(ClientBase):
   async def write_async(self, pid, address, buf):
-    await self.lock.acquire()
+    await self.packet_lock.acquire()
 
     # errorq = asyncio.Queue(1, loop=self.loop)
     seq = self.seqctr
@@ -60,7 +60,7 @@ class Write(ClientBase):
     # return [done, pending]
 
     res = await self.get_response_async()
-    self.lock.release()
+    self.packet_lock.release()
 
     if res != b"finished":
       print("did not recieve a b'finished' message, got: {}".format(res))

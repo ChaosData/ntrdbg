@@ -4,7 +4,7 @@ from ..clientbase import ClientBase
 
 class Read(ClientBase):
   async def read_async(self, pid, address, length, filename=None, append=False):
-    await self.lock.acquire()
+    await self.packet_lock.acquire()
 
     q = asyncio.Queue(1, loop=self.loop)
     seq = self.seqctr
@@ -16,7 +16,7 @@ class Read(ClientBase):
     del self.seqs[seq]
 
     res = await self.get_response_async() # eats up a "finished" message
-    self.lock.release()
+    self.packet_lock.release()
 
     if res != b"finished":
       print("did not recieve a b'finished' message, got: {}".format(res))

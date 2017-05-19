@@ -17,7 +17,7 @@ class ClientBase(object):
     self.asyncqueue = None
     self.conn = None
     self.log = None
-    self.lock = asyncio.Lock()
+    self.packet_lock = asyncio.Lock()
 
   def dosync(self, task):
     q = queue.Queue(1)
@@ -92,7 +92,7 @@ class ClientBase(object):
         self.log_message(msg)
 
   async def disconnect_async(self):
-    await self.lock.acquire()
+    await self.packet_lock.acquire()
 
     if self.conn is not None:
       reader, writer = self.conn
@@ -100,7 +100,7 @@ class ClientBase(object):
       reader.feed_eof()
       self.conn = None
 
-    self.lock.release()
+    self.packet_lock.release()
 
   # note: this can be called multiple times depending on how threads/process are
   #      cleaned up.
@@ -156,10 +156,10 @@ class ClientBase(object):
     return self.dosync(self.send_packet_async(*args))
 
   async def heartbeat_async(self, output=True):
-    await self.lock.acquire()
+    await self.packet_lock.acquire()
 
     if self.conn is None:
-      self.lock.release()
+      self.packet_lock.release()
       if output:
         print("no conn to beat")
       return True
@@ -178,7 +178,7 @@ class ClientBase(object):
     if output:
       print("*beat*")
 
-    self.lock.release()
+    self.packet_lock.release()
 
   def heartbeat(self, *args):
     self.dosync(self.heartbeat_async(*args))

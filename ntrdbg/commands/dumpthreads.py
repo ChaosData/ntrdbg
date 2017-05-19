@@ -4,7 +4,7 @@ from ..clientbase import ClientBase
 
 class DumpThreads(ClientBase):
   async def dump_threads_async(self, pid):
-    await self.lock.acquire()
+    await self.packet_lock.acquire()
 
     seq = self.seqctr
     self.seqctr += 1000
@@ -12,23 +12,29 @@ class DumpThreads(ClientBase):
     await self.send_packet_async(seq, 0x0, 0x7, [pid])
 
     res = await self.get_response_async()
-    self.lock.release()
+    self.packet_lock.release()
 
     data = res.decode('utf-8')
 
     ret = {
       "pid": pid,
-      "threads": []
+      "threads": {}
     }
     lines = [line for line in data.split('\n') if line != ""]
     for i in range(len(lines)):
-      idx = i // 8
-      if len(ret["threads"]) == idx:
-        ret["threads"].append({})
-      if i % 8 == 0 and lines[i].startswith("tid:"):
+      if lines[i].startswith("recommend"):
+        break
+
+      idx = i // 3
+      if idx not in ret["threads"]:
+        ret["threads"][idx] = {}
+      # if len(ret["threads"]) == idx:
+      #   ret["threads"].append({})
+
+      if i % 3 == 0 and lines[i].startswith("tid:"):
         ret["threads"][idx]["tid"] = int(lines[i].split("tid:")[1].strip(), 16)
-      elif i % 8 == 2 and len(lines[i]) > 32:
-        vals = [line for line in lines[i].split(" ") if line != ""]
+      elif i % 3 == 2 and len(lines[i]) > 32:
+        vals = [val for val in lines[i].split(" ") if val != ""]
         ret["threads"][idx]["reg"] = {
           "r0": vals[7],
           "r1": vals[8],
@@ -70,6 +76,7 @@ class DumpThreads(ClientBase):
         for key in ret["threads"][idx]["unknown"]:
           ret["threads"][idx]["unknown"][key] =\
             int(ret["threads"][idx]["unknown"][key], 16)
+
     return ret
 
 
