@@ -24,6 +24,7 @@ class Client(Read, Write, ListProcesses, DumpThreads, DumpMappings):
 
     self.backtask = asyncio.ensure_future(self.background(), loop=self.loop)
     self.beattask = asyncio.ensure_future(self.beat(), loop=self.loop)
+    self.bpscantask = asyncio.ensure_future(self.breakpoint_scanner(), loop=self.loop)
 
   def __enter__(self):
     pass
@@ -97,7 +98,7 @@ class Client(Read, Write, ListProcesses, DumpThreads, DumpMappings):
             if not bp.hit:
               if bp.address == pc:
                 bp.hit = True
-                await bp.onhit_task(bp, td["threads"][idx]["reg"])
+                await bp.call_task_async(self, bp, td["threads"][idx]["reg"])
 
       self.dbg_lock.release()
 
