@@ -17,6 +17,8 @@ class ClientBase(object):
     self.asyncqueue = None
     self.conn = None
     self.log = None
+
+    self.dbg_lock = asyncio.Lock()
     self.packet_lock = asyncio.Lock()
 
   def dosync(self, task):
@@ -92,6 +94,7 @@ class ClientBase(object):
         self.log_message(msg)
 
   async def disconnect_async(self):
+    await self.dbg_lock.acquire()
     await self.packet_lock.acquire()
 
     if self.conn is not None:
@@ -101,6 +104,7 @@ class ClientBase(object):
       self.conn = None
 
     self.packet_lock.release()
+    self.dbg_lock.release()
 
   # note: this can be called multiple times depending on how threads/process are
   #      cleaned up.

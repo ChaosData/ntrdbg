@@ -19,7 +19,6 @@ class Client(Read, Write, ListProcesses, DumpThreads, DumpMappings):
     #    self.seqctr = 1001
     self.log = log
 
-    self.dbg_lock = asyncio.Lock()
     self.breakpoints = {}
 
     self.backtask = asyncio.ensure_future(self.background(), loop=self.loop)
@@ -48,7 +47,9 @@ class Client(Read, Write, ListProcesses, DumpThreads, DumpMappings):
     await asyncio.sleep(1)
     await self.asyncqueue.put(None)
 
-  async def add_breakpoint_async(self, pid, address, onhit_task=None):
+  async def add_breakpoint_async(self, pid, address,
+                                 is_thumb=False,
+                                 onhit_task=None):
     await self.dbg_lock.acquire()
 
     bpm = {}
@@ -56,10 +57,14 @@ class Client(Read, Write, ListProcesses, DumpThreads, DumpMappings):
       bpm = self.breakpoints[pid]
     else:
       self.breakpoints[pid] = bpm
-    orig = await self.read_async(pid, address, 4)
+    orig = await self.read_async(pid, address, 2 if is_thumb else 4)
 
-    bpm[address] = Breakpoint(pid, address, orig, onhit_task)
-    await self.write_async(pid, address, INFINITE_LOOP)
+    bpm[address] = Breakpoint(pid, address, is_thumb, orig, onhit_task)
+
+    if is_thumb:
+      await self.write_async(pid, address, INFINITE_LOOP_THUMB)
+    else:
+      await self.write_async(pid, address, INFINITE_LOOP_ARM)
 
     self.dbg_lock.release()
 
@@ -67,18 +72,17 @@ class Client(Read, Write, ListProcesses, DumpThreads, DumpMappings):
     return self.dosync(self.add_breakpoint_async(*args))
 
   async def remove_breakpoint_async(self, pid, address):
-    await self.dbg_lock.acquire()
-
-    bpm = {}
-    if pid in self.breakpoints:
-      bpm = self.breakpoints[pid]
-    else:
-      self.breakpoints[pid] = bpm
-    if address in bpm:
-      bp = bpm.pop(address)
-      await self.write_async(pid, address, bp.orig)
-
-    self.dbg_lock.release()
+    with await self.dbg_lock:
+      bpm = {}
+      if pid in self.breakpoints:
+        bpm = self.breakpoints[pid]
+      else:
+        return
+      if address in bpm:
+        bp = bpm.pop(address)
+        await self.write_async(pid, address, bp.orig)
+      if len(self.breakpoints[pid]) == 0:
+        del self.breakpoints[pid]
 
   def remove_breakpoint(self, *args):
     return self.dosync(self.remove_breakpoint_async(*args))
@@ -86,21 +90,27 @@ class Client(Read, Write, ListProcesses, DumpThreads, DumpMappings):
   async def breakpoint_scanner(self):
     while self.conn is not None:
       await asyncio.sleep(1)
-      await self.dbg_lock.acquire()
 
-      for pid in self.breakpoints:
-        bpm = self.breakpoints[pid]
-        td = await self.dump_threads_async(pid)
-        for idx in td["threads"]:
-          pc = td["threads"][idx]["reg"]["pc"]
-          for address in bpm:
-            bp: Breakpoint = bpm[address]
-            if not bp.hit:
-              if bp.address == pc:
-                bp.hit = True
-                await bp.call_task_async(self, bp, td["threads"][idx]["reg"])
+      with await self.dbg_lock:
+        if self.conn is None:
+          break
 
-      self.dbg_lock.release()
+        for pid in self.breakpoints:
+          bpm = self.breakpoints[pid]
+          try:
+            td = await self.dump_threads_async(pid)
+          except Exception as e:
+            import traceback
+            print(e)
+            traceback.print_tb(e.__traceback__)
+          for idx in td["threads"]:
+            pc = td["threads"][idx]["reg"]["pc"]
+            for address in bpm:
+              bp: Breakpoint = bpm[address]
+              if not bp.hit:
+                if bp.address == pc:
+                  bp.hit = True
+                  await bp.call_task_async(self, bp, td["threads"][idx]["reg"])
 
 
 

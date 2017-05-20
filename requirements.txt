@@ -1,1 +1,2 @@
 wheel==0.29.0
+capstone>=3.0.0
